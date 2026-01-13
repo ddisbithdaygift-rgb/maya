@@ -1,0 +1,2 @@
+This is a test file to verify the public folder is working.
+If you can see this in your browser at http://localhost:5173/test-file.txt then your public folder is set up correctly.
