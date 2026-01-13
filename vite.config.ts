@@ -24,5 +24,14 @@ export default defineConfig({
     // Ensure production optimizations
     minify: 'esbuild',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate Three.js and React Three Fiber into their own chunks
+          'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
+          'react-vendor': ['react', 'react-dom'],
+        },
+      },
+    },
   },
 })

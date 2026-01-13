@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 
 // Import screens
 import { WelcomeScreen } from './components/screens/WelcomeScreen';
@@ -150,16 +149,12 @@ export default function App() {
     setCurrentScreen('similar-items');
   };
 
+  const handleContinueShopping = () => {
+    setCurrentScreen('brands');
+    setSelectedProduct(null);
+  };
+
   const handleSaveProfile = () => {
-    if (currentUser) {
-      const updatedUser: UserProfile = {
-        ...currentUser,
-        measurements: userMeasurements
-      };
-      const updatedDatabase = userDatabase.map(user => user.email === currentUser.email ? updatedUser : user);
-      setUserDatabase(updatedDatabase);
-      setCurrentUser(updatedUser);
-    }
     setCurrentScreen('save-profile');
   };
 
@@ -168,34 +163,32 @@ export default function App() {
     setUserMeasurements(null);
     setSelectedBrand(null);
     setSelectedProduct(null);
+    setCurrentUser(null);
   };
 
   const handleLoginClick = () => {
-    setLoginError('');
     setCurrentScreen('login');
   };
 
   const handleSignupClick = () => {
-    setSignupError('');
     setCurrentScreen('signup');
   };
 
   const handleLoginSubmit = (email: string, password: string) => {
-    // Find user in database
+    // Check credentials
     const user = userDatabase.find(u => u.email === email && u.password === password);
     
     if (user) {
-      // Successful login
       setCurrentUser(user);
+      setUserMeasurements(user.measurements || null);
       setLoginError('');
       
-      // Load user measurements if they exist
+      // Redirect based on profile completeness
       if (user.measurements) {
-        setUserMeasurements(user.measurements);
+        setCurrentScreen('brands');
+      } else {
+        setCurrentScreen('privacy-setup');
       }
-      
-      // Go to brand selection
-      setCurrentScreen('brands');
     } else {
       // Failed login
       setLoginError('Invalid email or password. Try the demo account.');
@@ -225,182 +218,151 @@ export default function App() {
     }
   };
 
-  const handleContinueShopping = () => {
-    setCurrentScreen('brands');
-    setSelectedProduct(null);
-  };
-
   // Screen navigation helpers
   const goBack = (screen: Screen) => setCurrentScreen(screen);
-
-  // Slide animation variants
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-  };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background">
       <div className="max-w-md mx-auto h-full bg-background shadow-xl overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentScreen}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="h-full overflow-auto"
-          >
-            {currentScreen === 'welcome' && (
-              <WelcomeScreen
-                onGetStarted={handleGetStarted}
-                onSkip={handleSkip}
-                onLogin={handleLoginClick}
-              />
-            )}
+        {currentScreen === 'welcome' && (
+          <WelcomeScreen
+            onGetStarted={handleGetStarted}
+            onSkip={handleSkip}
+            onLogin={handleLoginClick}
+          />
+        )}
 
-            {currentScreen === 'login' && (
-              <LoginScreen
-                onContinue={handleLoginSubmit}
-                onSignUp={handleSignupClick}
-                onBack={() => goBack('welcome')}
-                error={loginError}
-              />
-            )}
+        {currentScreen === 'login' && (
+          <LoginScreen
+            onContinue={handleLoginSubmit}
+            onSignUp={handleSignupClick}
+            onBack={() => goBack('welcome')}
+            error={loginError}
+          />
+        )}
 
-            {currentScreen === 'signup' && (
-              <SignUpScreen
-                onContinue={handleSignUpSubmit}
-                onBack={() => goBack('login')}
-                error={signupError}
-              />
-            )}
+        {currentScreen === 'signup' && (
+          <SignUpScreen
+            onContinue={handleSignUpSubmit}
+            onBack={() => goBack('login')}
+            error={signupError}
+          />
+        )}
 
-            {currentScreen === 'privacy-setup' && (
-              <PrivacySetupScreen
-                onContinue={handlePrivacySetup}
-                onBack={() => goBack('welcome')}
-              />
-            )}
+        {currentScreen === 'privacy-setup' && (
+          <PrivacySetupScreen
+            onContinue={handlePrivacySetup}
+            onBack={() => goBack('welcome')}
+          />
+        )}
 
-            {currentScreen === 'scan-prep' && (
-              <ScanPreparationScreen
-                onReady={() => setCurrentScreen('camera-scan')}
-                onBack={() => goBack('privacy-setup')}
-              />
-            )}
+        {currentScreen === 'scan-prep' && (
+          <ScanPreparationScreen
+            onReady={() => setCurrentScreen('camera-scan')}
+            onBack={() => goBack('privacy-setup')}
+          />
+        )}
 
-            {currentScreen === 'camera-scan' && (
-              <CameraScanScreen
-                onComplete={handleScanComplete}
-                onBack={() => goBack('scan-prep')}
-              />
-            )}
+        {currentScreen === 'camera-scan' && (
+          <CameraScanScreen
+            onComplete={handleScanComplete}
+            onBack={() => goBack('scan-prep')}
+          />
+        )}
 
-            {currentScreen === 'processing' && (
-              <ProcessingScreen
-                onComplete={handleProcessingComplete}
-                onBack={() => goBack('camera-scan')}
-              />
-            )}
+        {currentScreen === 'processing' && (
+          <ProcessingScreen
+            onComplete={handleProcessingComplete}
+            onBack={() => goBack('camera-scan')}
+          />
+        )}
 
-            {currentScreen === 'measurements' && userMeasurements && (
-              <MeasurementSummaryScreen
-                measurements={userMeasurements}
-                onContinue={handleMeasurementsConfirmed}
-                onBack={() => goBack('camera-scan')}
-              />
-            )}
+        {currentScreen === 'measurements' && userMeasurements && (
+          <MeasurementSummaryScreen
+            measurements={userMeasurements}
+            onContinue={handleMeasurementsConfirmed}
+            onBack={() => goBack('camera-scan')}
+          />
+        )}
 
-            {currentScreen === 'avatar' && userMeasurements && (
-              <AvatarPreviewScreen
-                measurements={userMeasurements}
-                onContinue={handleAvatarContinue}
-                onBack={() => goBack('measurements')}
-              />
-            )}
+        {currentScreen === 'avatar' && userMeasurements && (
+          <AvatarPreviewScreen
+            measurements={userMeasurements}
+            onContinue={handleAvatarContinue}
+            onBack={() => goBack('measurements')}
+          />
+        )}
 
-            {currentScreen === 'brands' && (
-              <BrandSelectionScreen
-                onSelectBrand={handleBrandSelected}
-                onBack={() => goBack('welcome')}
-              />
-            )}
+        {currentScreen === 'brands' && (
+          <BrandSelectionScreen
+            onSelectBrand={handleBrandSelected}
+            onBack={() => goBack('welcome')}
+          />
+        )}
 
-            {currentScreen === 'products' && selectedBrand && userMeasurements && (
-              <ProductSelectionScreen
-                brand={selectedBrand}
-                userMeasurements={userMeasurements}
-                onSelectProduct={handleProductSelected}
-                onBack={() => goBack('brands')}
-              />
-            )}
+        {currentScreen === 'products' && selectedBrand && userMeasurements && (
+          <ProductSelectionScreen
+            brand={selectedBrand}
+            userMeasurements={userMeasurements}
+            onSelectProduct={handleProductSelected}
+            onBack={() => goBack('brands')}
+          />
+        )}
 
-            {currentScreen === 'recommendation' && selectedProduct && userMeasurements && (
-              <SizeRecommendationScreen
-                product={selectedProduct}
-                userMeasurements={userMeasurements}
-                onViewFit={handleViewFit}
-                onViewSimilar={handleViewSimilar}
-                onBuyNow={() => setCurrentScreen('purchase-guide')}
-                onBack={() => goBack('products')}
-              />
-            )}
+        {currentScreen === 'recommendation' && selectedProduct && userMeasurements && (
+          <SizeRecommendationScreen
+            product={selectedProduct}
+            userMeasurements={userMeasurements}
+            onViewFit={handleViewFit}
+            onViewSimilar={handleViewSimilar}
+            onBuyNow={() => setCurrentScreen('purchase-guide')}
+            onBack={() => goBack('products')}
+          />
+        )}
 
-            {currentScreen === 'recommendation' && selectedProduct && !userMeasurements && (
-              <NoMeasurementsScreen
-                onGetMeasured={() => setCurrentScreen('privacy-setup')}
-                onBack={() => goBack('products')}
-              />
-            )}
+        {currentScreen === 'recommendation' && selectedProduct && !userMeasurements && (
+          <NoMeasurementsScreen
+            onGetMeasured={() => setCurrentScreen('privacy-setup')}
+            onBack={() => goBack('products')}
+          />
+        )}
 
-            {currentScreen === 'purchase-guide' && selectedProduct && userMeasurements && (
-              <PurchaseGuideScreen
-                product={selectedProduct}
-                recommendedSize={calculateSizeRecommendation(userMeasurements, selectedProduct).recommendedSize}
-                onBuyNow={handleContinueShopping}
-                onBack={() => goBack('recommendation')}
-              />
-            )}
+        {currentScreen === 'purchase-guide' && selectedProduct && userMeasurements && (
+          <PurchaseGuideScreen
+            product={selectedProduct}
+            recommendedSize={calculateSizeRecommendation(userMeasurements, selectedProduct).recommendedSize}
+            onBuyNow={handleContinueShopping}
+            onBack={() => goBack('recommendation')}
+          />
+        )}
 
-            {currentScreen === 'fit-visualization' && selectedProduct && userMeasurements && (
-              <FitVisualizationScreen
-                product={selectedProduct}
-                userMeasurements={userMeasurements}
-                onContinue={handleViewSimilar}
-                onBack={() => goBack('recommendation')}
-              />
-            )}
+        {currentScreen === 'fit-visualization' && selectedProduct && userMeasurements && (
+          <FitVisualizationScreen
+            product={selectedProduct}
+            userMeasurements={userMeasurements}
+            onContinue={handleViewSimilar}
+            onBack={() => goBack('recommendation')}
+          />
+        )}
 
-            {currentScreen === 'similar-items' && selectedProduct && userMeasurements && (
-              <SimilarItemsScreen
-                currentProduct={selectedProduct}
-                userMeasurements={userMeasurements}
-                onSelectProduct={handleProductSelected}
-                onSaveAndExit={handleSaveProfile}
-                onBack={() => goBack('recommendation')}
-              />
-            )}
+        {currentScreen === 'similar-items' && selectedProduct && userMeasurements && (
+          <SimilarItemsScreen
+            currentProduct={selectedProduct}
+            userMeasurements={userMeasurements}
+            onSelectProduct={handleProductSelected}
+            onSaveAndExit={handleSaveProfile}
+            onBack={() => goBack('recommendation')}
+          />
+        )}
 
-            {currentScreen === 'save-profile' && (
-              <SaveProfileScreen
-                onBuyNow={handleContinueShopping}
-                onStartOver={handleStartOver}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {currentScreen === 'save-profile' && (
+          <SaveProfileScreen
+            onBuyNow={handleContinueShopping}
+            onStartOver={handleStartOver}
+          />
+        )}
       </div>
     </div>
   );
 }
+
