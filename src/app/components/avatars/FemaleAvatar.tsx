@@ -60,15 +60,6 @@ function Model() {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <mesh>
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
-        <meshBasicMaterial color="blue" />
-      </mesh>
-    );
-  }
-
   if (error) {
     return (
       <mesh>
@@ -79,12 +70,7 @@ function Model() {
   }
 
   if (!model) {
-    return (
-      <mesh>
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
-        <meshBasicMaterial color="yellow" />
-      </mesh>
-    );
+    return null;
   }
 
   return <primitive object={model} scale={1} />;
