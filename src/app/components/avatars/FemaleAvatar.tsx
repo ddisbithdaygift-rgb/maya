@@ -1,8 +1,17 @@
-import { Canvas } from '@react-three/fiber';
+import { Canvas, extend } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Suspense, useEffect, useState } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
+
+extend({
+  Mesh: THREE.Mesh,
+  BoxGeometry: THREE.BoxGeometry,
+  MeshBasicMaterial: THREE.MeshBasicMaterial,
+  AmbientLight: THREE.AmbientLight,
+  DirectionalLight: THREE.DirectionalLight,
+  PointLight: THREE.PointLight,
+});
 
 function Model() {
   const [model, setModel] = useState<THREE.Group | null>(null);
